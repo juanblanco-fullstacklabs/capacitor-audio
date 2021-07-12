@@ -4,6 +4,7 @@ type NoArgEvents =
   | "playEnd"
   | "playAllEnd"
   | "playPaused"
+  | "playResumed"
   | "playNext"
   | "playPrevious"
   | "play";
