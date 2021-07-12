@@ -13,10 +13,10 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     });
   }
 
-  current: HTMLAudioElement = null;
+  current?: HTMLAudioElement;
   currentIndex = 0;
-  audios: HTMLAudioElement[];
-  info: NowPlayingInfo;
+  audios?: HTMLAudioElement[];
+  info?: NowPlayingInfo;
 
   playList(items: PlaylistItem[]) {
     this.audios = items.map((v: { src: string }, _) => {
@@ -41,13 +41,20 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
   }
 
   play() {
+    if (this.current == null) {
+      throw new Error("no current item to play");
+    }
+    const audios = this.audios;
+    if (audios == null) {
+      throw new Error("no playlist");
+    }
     this.current.onended = () => {
       this.triggerEvent("playEnd");
-      if (this.current === this.audios[this.audios.length - 1]) {
+      if (this.current === audios[audios.length - 1]) {
         this.triggerEvent("playAllEnd");
       } else {
         this.currentIndex += 1;
-        this.current = this.audios[this.currentIndex];
+        this.current = audios[this.currentIndex];
         this.play();
       }
     };
