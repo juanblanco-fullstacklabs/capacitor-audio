@@ -1,7 +1,16 @@
-declare module "@capacitor/core" {
-  interface PluginRegistry {
-    AudioPlugin: AudioPluginPlugin;
-  }
+export interface AudioPluginPlugin {
+  playList(items: PlaylistItem[]): void;
+  play(): void;
+  pausePlay(): void;
+  resumePlay(): void;
+  setPlaying(info: NowPlayingInfo): void;
 }
 
-export interface AudioPluginPlugin {}
+export interface PlaylistItem {
+  src: string;
+}
+
+export interface NowPlayingInfo {
+  title: string;
+  artist: string;
+}

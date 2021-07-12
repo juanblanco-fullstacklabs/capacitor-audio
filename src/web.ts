@@ -1,5 +1,9 @@
-import { registerPlugin, WebPlugin } from "@capacitor/core";
-import { AudioPluginPlugin } from "./definitions";
+import { WebPlugin } from "@capacitor/core";
+import type {
+  AudioPluginPlugin,
+  NowPlayingInfo,
+  PlaylistItem,
+} from "./definitions";
 
 export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
   constructor() {
@@ -9,11 +13,12 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     });
   }
 
-  current: any = null;
+  current: HTMLAudioElement = null;
   currentIndex = 0;
-  audios: any[];
-  info: object;
-  playList(items: object[]) {
+  audios: HTMLAudioElement[];
+  info: NowPlayingInfo;
+
+  playList(items: PlaylistItem[]) {
     this.audios = items.map((v: { src: string }, _) => {
       let audio = new Audio();
       audio.src = v.src;
@@ -24,6 +29,7 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     this.currentIndex = 0;
     this.play();
   }
+
   triggerEvent(name: string) {
     var event; // The custom event that will be created
     if (document.createEvent) {
@@ -33,8 +39,9 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
       window.dispatchEvent(event);
     }
   }
+
   play() {
-    this.current.onended = (_: void) => {
+    this.current.onended = () => {
       this.triggerEvent("playEnd");
       if (this.current === this.audios[this.audios.length - 1]) {
         this.triggerEvent("playAllEnd");
@@ -44,30 +51,25 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
         this.play();
       }
     };
-    this.current.onpause = (_: void) => {
+    this.current.onpause = () => {
       this.triggerEvent("playPaused");
     };
-    this.current.onplaying = (_: void) => {
+    this.current.onplaying = () => {
       this.triggerEvent("playResumed");
     };
     this.current && this.current.play();
   }
+
   pausePlay() {
     this.current && this.current.pause();
   }
+
   resumePlay() {
     this.play();
   }
-  setPlaying(info: object) {
+
+  setPlaying(info: NowPlayingInfo) {
     this.info = info;
     return new Promise<void>((r) => r());
   }
 }
-
-const AudioPlugin = new AudioPluginWeb();
-
-export { AudioPlugin };
-
-registerPlugin("AudioPlugin", {
-  web: () => import("./web").then((m) => new m.AudioPluginWeb()),
-});
