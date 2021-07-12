@@ -12,4 +12,5 @@ export interface PlaylistItem {
 export interface NowPlayingInfo {
   title: string;
   artist: string;
+  artwork?: string;
 }
