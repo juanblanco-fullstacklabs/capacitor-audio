@@ -24,6 +24,9 @@ class Player: NSObject {
     func toEnd() -> Bool {
         return self.player.currentItem == playItems.last
     }
+    func seek(to: CMTime) {
+        self.player.seek(to: to)
+    }
 }
 
 /**
@@ -120,5 +123,12 @@ public class AudioPlugin: CAPPlugin {
     }
     @objc func resumePlay(_ call: CAPPluginCall) {
         self.audioPlayer?.play()
+    }
+    @objc func seek(_ call: CAPPluginCall) {
+        let newTimeOrNil = call.getDouble("to")
+        if (newTimeOrNil != nil) {
+            audioPlayer!.seek(to: CMTime(seconds: newTimeOrNil!, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+        }
+        call.resolve()
     }
 }

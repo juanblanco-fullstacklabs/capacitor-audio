@@ -17,6 +17,7 @@ export interface AudioPluginPlugin {
   setPlaying(info: NowPlayingInfo): void;
   pausePlay(): void;
   resumePlay(): void;
+  seek(options?: { to: number }): Promise<void>;
 
   addListener<EventName extends keyof EventNameDataMap>(
     eventName: EventName,

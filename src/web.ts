@@ -79,4 +79,12 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     this.info = info;
     return new Promise<void>((r) => r());
   }
+
+  async seek(options: { to: number }): Promise<void> {
+    if (this.current) {
+      if (options != null) {
+        this.current.currentTime = options.to;
+      }
+    }
+  }
 }
