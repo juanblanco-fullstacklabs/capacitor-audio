@@ -4,5 +4,4 @@ declare module "@capacitor/core" {
   }
 }
 
-export interface AudioPluginPlugin {
-}
+export interface AudioPluginPlugin {}
