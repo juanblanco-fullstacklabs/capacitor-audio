@@ -93,6 +93,8 @@ public class AudioPlugin: CAPPlugin {
         let artist = call.getString("artist")
         let artwork = call.getString("artwork")
         let isLive = call.getBool("isLive") ?? false
+        let duration = call.getDouble("duration")
+        let currentTime = call.getDouble("currentTime")
         
         var nowPlayingInfo = [String: Any] ()
         
@@ -112,6 +114,11 @@ public class AudioPlugin: CAPPlugin {
         }
         
         nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = isLive
+        
+        if (currentTime != nil && duration != nil) {
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         

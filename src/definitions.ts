@@ -34,4 +34,6 @@ export interface NowPlayingInfo {
   artist: string;
   artwork?: string;
   isLive?: boolean;
+  duration?: number;
+  currentTime?: number;
 }
