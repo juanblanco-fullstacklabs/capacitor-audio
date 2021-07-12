@@ -28,19 +28,12 @@ class Player: NSObject {
 @objc(AudioPlugin)
 public class AudioPlugin: CAPPlugin {
     
-    @objc func echo(_ call: CAPPluginCall) {
-        let value = call.getString("value") ?? ""
-        call.success([
-            "value": value
-        ])
-    }
-    
     var isInited = false
     
     @objc func onPlayEnd(){
-        self.bridge.triggerWindowJSEvent(eventName: "playEnd")
+        self.bridge?.triggerWindowJSEvent(eventName: "playEnd")
         if (self.audioPlayer?.toEnd() ?? false) {
-            self.bridge.triggerWindowJSEvent(eventName: "playAllEnd")
+            self.bridge?.triggerWindowJSEvent(eventName: "playAllEnd")
         }
     }
     
@@ -61,16 +54,16 @@ public class AudioPlugin: CAPPlugin {
         DispatchQueue.main.sync {
             let command = MPRemoteCommandCenter.shared()
             command.pauseCommand.isEnabled = true
-            command.pauseCommand.addTarget(handler: {e in self.bridge.triggerWindowJSEvent(eventName: "playPaused"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success })
+            command.pauseCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playPaused"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success })
             
             command.nextTrackCommand.isEnabled = true
-            command.nextTrackCommand.addTarget(handler: {e in self.bridge.triggerWindowJSEvent(eventName: "playNext"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            command.nextTrackCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playNext"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
             
             command.previousTrackCommand.isEnabled = true
-            command.previousTrackCommand.addTarget(handler: {e in self.bridge.triggerWindowJSEvent(eventName: "playPrevious"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            command.previousTrackCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playPrevious"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
             
             command.playCommand.isEnabled = true
-            command.playCommand.addTarget(handler: {e in self.bridge.triggerWindowJSEvent(eventName: "play"); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
+            command.playCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "play"); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
             
             let nofity = NotificationCenter.default
             nofity.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
