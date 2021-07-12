@@ -92,6 +92,7 @@ public class AudioPlugin: CAPPlugin {
         let title = call.getString("title")
         let artist = call.getString("artist")
         let artwork = call.getString("artwork")
+        let isLive = call.getBool("isLive") ?? false
         
         var nowPlayingInfo = [String: Any] ()
         
@@ -109,6 +110,8 @@ public class AudioPlugin: CAPPlugin {
                 MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
             }).resume()
         }
+        
+        nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = isLive
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         
