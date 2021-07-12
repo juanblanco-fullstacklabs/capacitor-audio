@@ -8,7 +8,7 @@
     "build": "npm run clean && tsc",
     "clean": "rm -rf ./dist",
     "watch": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build"
   },
   "author": "qingant",
   "license": "MIT",
