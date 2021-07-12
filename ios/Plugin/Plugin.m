@@ -8,4 +8,5 @@ CAP_PLUGIN(AudioPlugin, "Audio",
            CAP_PLUGIN_METHOD(setPlaying, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(pausePlay, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(resumePlay, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(seek, CAPPluginReturnPromise);
 )
