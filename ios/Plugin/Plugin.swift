@@ -43,9 +43,7 @@ public class AudioPlugin: CAPPlugin {
         }
         let session = AVAudioSession.sharedInstance()
         do{
-            //  设置会话类别
             try session.setCategory(AVAudioSession.Category.playback)
-            //  激活会话
             try session.setActive(true)
         }catch {
             print(error)
@@ -72,13 +70,29 @@ public class AudioPlugin: CAPPlugin {
     }
     
     @objc func setPlaying(_ call: CAPPluginCall) {
-        let title = call.getString("title") ?? "多知电台"
-        let artist = call.getString("artist") ?? "多小知"
-        let now = MPNowPlayingInfoCenter.default()
-        now.nowPlayingInfo = [
-            MPMediaItemPropertyTitle: title,
-            MPMediaItemPropertyArtist: artist
-        ]
+        let title = call.getString("title")
+        let artist = call.getString("artist")
+        let artwork = call.getString("artwork")
+        
+        var nowPlayingInfo = [String: Any] ()
+        
+        nowPlayingInfo[MPMediaItemPropertyTitle] = title
+        nowPlayingInfo[MPMediaItemPropertyArtist] = artist
+        
+        if (artwork != nil) {
+            let artworkUrl = URL(string: artwork!)!
+            URLSession.shared.dataTask(with: artworkUrl, completionHandler: {(data, response, error) in
+                let image =  UIImage(data: data!)!
+                let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ -> UIImage in
+                    return image
+                })
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+            }).resume()
+        }
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        
         call.resolve(["status": "ok"])
     }
     
