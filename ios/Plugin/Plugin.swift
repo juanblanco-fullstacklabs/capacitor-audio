@@ -6,12 +6,13 @@ import MediaPlayer
 class Player: NSObject {
     var playItems: [AVPlayerItem]
     var player: AVQueuePlayer
+    var periodicTimeObserverHandle: Any
     
     init(items: [AVPlayerItem], plugin: CAPPlugin) {
         self.playItems = items
         let player = AVQueuePlayer(items: items)
         self.player = player
-        player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
+        periodicTimeObserverHandle = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
             plugin.notifyListeners("playTimeUpdate", data: ["currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()), "duration": CMTimeGetSeconds(player.currentItem!.duration) ])
         }
     }
@@ -26,6 +27,10 @@ class Player: NSObject {
     }
     func seek(to: CMTime) {
         self.player.seek(to: to)
+    }
+    func destroy(){
+        self.player.removeTimeObserver(self.periodicTimeObserverHandle)
+        self.player.removeAllItems()
     }
 }
 
@@ -114,6 +119,9 @@ public class AudioPlugin: CAPPlugin {
         let urls_ = urls.filter({u in u != nil}).map({u in u!})
         let items = urls_.map({u in AVPlayerItem(url: u)})
         self.initAudio()
+        if (self.audioPlayer != nil) {
+            self.audioPlayer!.destroy();
+        }
         self.audioPlayer = Player(items: items, plugin: self)
         self.audioPlayer?.play()
     }
