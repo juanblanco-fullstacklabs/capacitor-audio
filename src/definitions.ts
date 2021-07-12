@@ -1,9 +1,8 @@
 export interface AudioPluginPlugin {
   playList(options: { items: PlaylistItem[] }): void;
-  play(): void;
+  setPlaying(info: NowPlayingInfo): void;
   pausePlay(): void;
   resumePlay(): void;
-  setPlaying(info: NowPlayingInfo): void;
 }
 
 export interface PlaylistItem {
