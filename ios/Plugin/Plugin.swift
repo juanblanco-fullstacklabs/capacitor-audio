@@ -13,7 +13,13 @@ class Player: NSObject {
         let player = AVQueuePlayer(items: items)
         self.player = player
         periodicTimeObserverHandle = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
-            plugin.notifyListeners("playTimeUpdate", data: ["currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()), "duration": CMTimeGetSeconds(player.currentItem!.duration) ])
+            if (player.currentItem != nil) {
+                plugin.notifyListeners("playTimeUpdate", data: [
+                    "currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()),
+                    "duration": CMTimeGetSeconds(player.currentItem!.duration),
+                    "isLive": CMTIME_IS_INDEFINITE(player.currentItem!.duration)
+                ])
+            }
         }
     }
     func play() {

@@ -9,7 +9,7 @@ type NoArgEvents =
   | "playPrevious";
 
 type EventNameDataMap = {
-  playTimeUpdate: { currentTime: number; duration: number };
+  playTimeUpdate: { currentTime: number; duration: number; isLive: boolean };
 } & Record<NoArgEvents, {}>;
 
 export interface AudioPluginPlugin {
