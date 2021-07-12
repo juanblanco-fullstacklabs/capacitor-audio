@@ -6,8 +6,7 @@ type NoArgEvents =
   | "playPaused"
   | "playResumed"
   | "playNext"
-  | "playPrevious"
-  | "play";
+  | "playPrevious";
 
 type EventNameDataMap = {
   playTimeUpdate: { currentTime: number; duration: number };

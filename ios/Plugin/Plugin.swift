@@ -6,9 +6,14 @@ import MediaPlayer
 class Player: NSObject {
     var playItems: [AVPlayerItem]
     var player: AVQueuePlayer
-    init(items: [AVPlayerItem]) {
+    
+    init(items: [AVPlayerItem], plugin: CAPPlugin) {
         self.playItems = items
-        player = AVQueuePlayer(items: items)
+        let player = AVQueuePlayer(items: items)
+        self.player = player
+        player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
+            plugin.notifyListeners("playTimeUpdate", data: ["currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()), "duration": CMTimeGetSeconds(player.currentItem!.duration) ])
+        }
     }
     func play() {
         self.player.play()
@@ -31,9 +36,9 @@ public class AudioPlugin: CAPPlugin {
     var isInited = false
     
     @objc func onPlayEnd(){
-        self.bridge?.triggerWindowJSEvent(eventName: "playEnd")
+        self.notifyListeners("playEnd", data: [:])
         if (self.audioPlayer?.toEnd() ?? false) {
-            self.bridge?.triggerWindowJSEvent(eventName: "playAllEnd")
+            self.notifyListeners("playAllEnd", data: [:])
         }
     }
     
@@ -52,16 +57,16 @@ public class AudioPlugin: CAPPlugin {
         DispatchQueue.main.sync {
             let command = MPRemoteCommandCenter.shared()
             command.pauseCommand.isEnabled = true
-            command.pauseCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playPaused"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success })
+            command.pauseCommand.addTarget(handler: {e in self.notifyListeners("playPaused", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success })
             
             command.nextTrackCommand.isEnabled = true
-            command.nextTrackCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playNext"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            command.nextTrackCommand.addTarget(handler: {e in self.notifyListeners("playNext", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
             
             command.previousTrackCommand.isEnabled = true
-            command.previousTrackCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "playPrevious"); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            command.previousTrackCommand.addTarget(handler: {e in self.notifyListeners("playPrevious", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
             
             command.playCommand.isEnabled = true
-            command.playCommand.addTarget(handler: {e in self.bridge?.triggerWindowJSEvent(eventName: "play"); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
+            command.playCommand.addTarget(handler: {e in self.notifyListeners("playResumed", data: [:]); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
             
             let nofity = NotificationCenter.default
             nofity.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
@@ -106,7 +111,7 @@ public class AudioPlugin: CAPPlugin {
         let urls_ = urls.filter({u in u != nil}).map({u in u!})
         let items = urls_.map({u in AVPlayerItem(url: u)})
         self.initAudio()
-        self.audioPlayer = Player(items: items)
+        self.audioPlayer = Player(items: items, plugin: self)
         self.audioPlayer?.play()
     }
     
