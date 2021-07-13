@@ -20,6 +20,9 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
   info?: NowPlayingInfo;
 
   playList({ items }: { items: PlaylistItem[] }) {
+    if (this.audios != null) {
+      this.audios.forEach((audio) => audio.dispose());
+    }
     this.audios = items.map((item) => {
       let audio = videojs(new Audio());
       audio.src(item);
