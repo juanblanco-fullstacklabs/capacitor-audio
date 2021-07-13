@@ -32,6 +32,7 @@ export interface AudioPluginPlugin {
 
 export interface PlaylistItem {
   src: string;
+  type?: string;
 }
 
 export interface NowPlayingInfo {

@@ -13,9 +13,10 @@
   "author": "justicointeractive",
   "license": "MIT",
   "devDependencies": {
-    "@capacitor/core": "^3.1.1",
     "@capacitor/android": "^3.1.1",
+    "@capacitor/core": "^3.1.1",
     "@capacitor/ios": "^3.1.1",
+    "@types/video.js": "^7.3.24",
     "typescript": "^4.0.3"
   },
   "files": [
@@ -43,5 +44,8 @@
   },
   "bugs": {
     "url": "github.com/justicointeractive/capacitor-audio/issues"
+  },
+  "dependencies": {
+    "video.js": "^7.13.3"
   }
 }

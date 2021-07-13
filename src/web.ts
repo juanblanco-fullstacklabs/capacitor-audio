@@ -1,4 +1,5 @@
 import { WebPlugin } from "@capacitor/core";
+import videojs, { VideoJsPlayer } from "video.js";
 import type {
   AudioPluginPlugin,
   NowPlayingInfo,
@@ -13,15 +14,15 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     });
   }
 
-  current?: HTMLAudioElement;
+  current?: VideoJsPlayer;
   currentIndex = 0;
-  audios?: HTMLAudioElement[];
+  audios?: VideoJsPlayer[];
   info?: NowPlayingInfo;
 
   playList({ items }: { items: PlaylistItem[] }) {
-    this.audios = items.map((v: { src: string }, _) => {
-      let audio = new Audio();
-      audio.src = v.src;
+    this.audios = items.map((item) => {
+      let audio = videojs(new Audio());
+      audio.src(item);
       audio.load();
       return audio;
     });
@@ -48,7 +49,7 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     if (audios == null) {
       throw new Error("no playlist");
     }
-    this.current.onended = () => {
+    this.current.on("ended", () => {
       this.triggerEvent("playEnd");
       if (this.current === audios[audios.length - 1]) {
         this.triggerEvent("playAllEnd");
@@ -57,13 +58,13 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
         this.current = audios[this.currentIndex];
         this.play();
       }
-    };
-    this.current.onpause = () => {
+    });
+    this.current.on("pause", () => {
       this.triggerEvent("playPaused");
-    };
-    this.current.onplaying = () => {
+    });
+    this.current.on("playing", () => {
       this.triggerEvent("playResumed");
-    };
+    });
     this.current && this.current.play();
   }
 
@@ -83,7 +84,7 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
   async seek(options: { to: number }): Promise<void> {
     if (this.current) {
       if (options != null) {
-        this.current.currentTime = options.to;
+        this.current.currentTime(options.to);
       }
     }
   }
