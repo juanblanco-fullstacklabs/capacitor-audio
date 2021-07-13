@@ -30,6 +30,7 @@ class Player: NSObject {
                     nowPlayingInfo![MPMediaItemPropertyPlaybackDuration] = duration
                     nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
                     nowPlayingInfo![MPNowPlayingInfoPropertyIsLiveStream] = isLive
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
                 }
             }
         }
