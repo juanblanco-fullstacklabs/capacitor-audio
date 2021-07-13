@@ -95,6 +95,14 @@ public class AudioPlugin: CAPPlugin {
             command.playCommand.isEnabled = true
             command.playCommand.addTarget(handler: {e in self.notifyListeners("playResumed", data: [:]); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
             
+            command.changePlaybackPositionCommand.isEnabled = true
+            command.changePlaybackPositionCommand.addTarget(handler: {e in
+                if let remoteEvent = e as? MPChangePlaybackPositionCommandEvent {
+                    self.audioPlayer?.seek(to: CMTime(seconds: remoteEvent.positionTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC)));
+                }
+                return MPRemoteCommandHandlerStatus.success
+            })
+            
             let nofity = NotificationCenter.default
             nofity.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
         }
