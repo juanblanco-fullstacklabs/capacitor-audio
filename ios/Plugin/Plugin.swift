@@ -15,11 +15,22 @@ class Player: NSObject {
         periodicTimeObserverHandle = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
             if (player.currentItem != nil) {
                 let isLive = CMTIME_IS_INDEFINITE(player.currentItem!.duration)
+                let currentTime = CMTimeGetSeconds(player.currentItem!.currentTime())
+                let duration = isLive ? 0 : CMTimeGetSeconds(player.currentItem!.duration)
+                
                 plugin.notifyListeners("playTimeUpdate", data: [
-                    "currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()),
-                    "duration": isLive ? 0 : CMTimeGetSeconds(player.currentItem!.duration),
+                    "currentTime": currentTime,
+                    "duration": duration,
                     "isLive": isLive
                 ])
+                
+                var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
+
+                if (nowPlayingInfo != nil) {
+                    nowPlayingInfo![MPMediaItemPropertyPlaybackDuration] = duration
+                    nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+                    nowPlayingInfo![MPNowPlayingInfoPropertyIsLiveStream] = isLive
+                }
             }
         }
     }
@@ -93,9 +104,6 @@ public class AudioPlugin: CAPPlugin {
         let title = call.getString("title")
         let artist = call.getString("artist")
         let artwork = call.getString("artwork")
-        let isLive = call.getBool("isLive") ?? false
-        let duration = call.getDouble("duration")
-        let currentTime = call.getDouble("currentTime")
         
         var nowPlayingInfo = [String: Any] ()
         
@@ -112,13 +120,6 @@ public class AudioPlugin: CAPPlugin {
                 nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
                 MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
             }).resume()
-        }
-        
-        nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = isLive
-        
-        if (currentTime != nil && duration != nil) {
-            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
         }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
