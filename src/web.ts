@@ -31,16 +31,6 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     this.play();
   }
 
-  triggerEvent(name: string) {
-    var event; // The custom event that will be created
-    if (document.createEvent) {
-      event = document.createEvent("HTMLEvents");
-      event.initEvent(name, true, true);
-      // event.eventName = name;
-      window.dispatchEvent(event);
-    }
-  }
-
   play() {
     if (this.current == null) {
       throw new Error("no current item to play");
@@ -50,9 +40,9 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
       throw new Error("no playlist");
     }
     this.current.on("ended", () => {
-      this.triggerEvent("playEnd");
+      this.notifyListeners("playEnd", {});
       if (this.current === audios[audios.length - 1]) {
-        this.triggerEvent("playAllEnd");
+        this.notifyListeners("playAllEnd", {});
       } else {
         this.currentIndex += 1;
         this.current = audios[this.currentIndex];
@@ -60,10 +50,17 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
       }
     });
     this.current.on("pause", () => {
-      this.triggerEvent("playPaused");
+      this.notifyListeners("playPaused", {});
     });
     this.current.on("playing", () => {
-      this.triggerEvent("playResumed");
+      this.notifyListeners("playResumed", {});
+    });
+    this.current.on("timeupdate", () => {
+      this.notifyListeners("playTimeUpdate", {
+        currentTime: this.current?.currentTime(),
+        duration: this.current?.duration(),
+        isLive: this.current?.liveTracker.isLive(),
+      });
     });
     this.current && this.current.play();
   }
