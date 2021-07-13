@@ -82,29 +82,62 @@ public class AudioPlugin: CAPPlugin {
             return
         }
         DispatchQueue.main.sync {
-            let command = MPRemoteCommandCenter.shared()
-            command.pauseCommand.isEnabled = true
-            command.pauseCommand.addTarget(handler: {e in self.notifyListeners("playPaused", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success })
+            let remoteCommandCenter = MPRemoteCommandCenter.shared()
             
-            command.nextTrackCommand.isEnabled = true
-            command.nextTrackCommand.addTarget(handler: {e in self.notifyListeners("playNext", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            remoteCommandCenter.pauseCommand.addTarget(handler: {e in
+                self.notifyListeners("playPaused", data: [:])
+                self.audioPlayer?.pause()
+                return .success
+            })
             
-            command.previousTrackCommand.isEnabled = true
-            command.previousTrackCommand.addTarget(handler: {e in self.notifyListeners("playPrevious", data: [:]); self.audioPlayer?.pause(); return MPRemoteCommandHandlerStatus.success})
+            remoteCommandCenter.nextTrackCommand.addTarget(handler: {e in
+                self.notifyListeners("playNext", data: [:])
+                self.audioPlayer?.pause()
+                return .success
+            })
             
-            command.playCommand.isEnabled = true
-            command.playCommand.addTarget(handler: {e in self.notifyListeners("playResumed", data: [:]); self.audioPlayer?.play(); return MPRemoteCommandHandlerStatus.success})
+            remoteCommandCenter.previousTrackCommand.addTarget(handler: {e in
+                self.notifyListeners("playPrevious", data: [:])
+                self.audioPlayer?.pause()
+                return .success
+            })
             
-            command.changePlaybackPositionCommand.isEnabled = true
-            command.changePlaybackPositionCommand.addTarget(handler: {e in
+            remoteCommandCenter.playCommand.addTarget(handler: {e in
+                self.notifyListeners("playResumed", data: [:])
+                self.audioPlayer?.play()
+                return .success
+            })
+            
+            remoteCommandCenter.skipForwardCommand.preferredIntervals = [15, 30, 45]
+            remoteCommandCenter.skipForwardCommand.addTarget(handler: {e in
+                guard let skipEvent = e as? MPSkipIntervalCommandEvent else {
+                    return .commandFailed
+                }
+                self.notifyListeners("skipForward", data: ["interval": skipEvent.interval])
+                self.seek(time: self.currentTime() + skipEvent.interval)
+                return .success
+            })
+            
+            remoteCommandCenter.skipBackwardCommand.preferredIntervals = [15, 30, 45]
+            remoteCommandCenter.skipBackwardCommand.addTarget(handler: {e in
+                guard let skipEvent = e as? MPSkipIntervalCommandEvent else {
+                    return .commandFailed
+                }
+                self.notifyListeners("skipBackward", data: ["interval": skipEvent.interval])
+                self.seek(time: self.currentTime() - skipEvent.interval)
+                return .success
+            })
+            
+            remoteCommandCenter.changePlaybackPositionCommand.isEnabled = true
+            remoteCommandCenter.changePlaybackPositionCommand.addTarget(handler: {e in
                 if let remoteEvent = e as? MPChangePlaybackPositionCommandEvent {
                     self.audioPlayer?.seek(to: CMTime(seconds: remoteEvent.positionTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC)));
                 }
-                return MPRemoteCommandHandlerStatus.success
+                return .success
             })
             
-            let nofity = NotificationCenter.default
-            nofity.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+            let notify = NotificationCenter.default
+            notify.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
         }
         self.isInited = true
     }
@@ -113,6 +146,7 @@ public class AudioPlugin: CAPPlugin {
         let title = call.getString("title")
         let artist = call.getString("artist")
         let artwork = call.getString("artwork")
+        let remoteCommands = call.getArray("remoteCommands", String.self) ?? ["pause","play","skipForward","skipBackward"]
         
         var nowPlayingInfo = [String: Any] ()
         
@@ -132,6 +166,14 @@ public class AudioPlugin: CAPPlugin {
         }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        
+        let remoteCommandCenter = MPRemoteCommandCenter.shared()
+        remoteCommandCenter.pauseCommand.isEnabled = remoteCommands.contains("pause")
+        remoteCommandCenter.nextTrackCommand.isEnabled = remoteCommands.contains("nextTrack")
+        remoteCommandCenter.previousTrackCommand.isEnabled = remoteCommands.contains("previousTrack")
+        remoteCommandCenter.playCommand.isEnabled = remoteCommands.contains("play")
+        remoteCommandCenter.skipForwardCommand.isEnabled = remoteCommands.contains("skipForward")
+        remoteCommandCenter.skipBackwardCommand.isEnabled = remoteCommands.contains("skipBackward")
         
         call.resolve(["status": "ok"])
     }
@@ -162,8 +204,16 @@ public class AudioPlugin: CAPPlugin {
     @objc func seek(_ call: CAPPluginCall) {
         let newTimeOrNil = call.getDouble("to")
         if (newTimeOrNil != nil) {
-            audioPlayer!.seek(to: CMTime(seconds: newTimeOrNil!, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+            self.seek(time: newTimeOrNil!)
         }
         call.resolve()
+    }
+    
+    func seek(time:Double) {
+        audioPlayer!.seek(to: CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+    }
+    
+    func currentTime() -> Double {
+        return CMTimeGetSeconds(self.audioPlayer!.player.currentTime())
     }
 }

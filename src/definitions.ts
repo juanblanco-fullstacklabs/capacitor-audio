@@ -8,9 +8,14 @@ type NoArgEvents =
   | "playNext"
   | "playPrevious";
 
-type EventNameDataMap = {
-  playTimeUpdate: { currentTime: number; duration: number; isLive: boolean };
-} & Record<NoArgEvents, {}>;
+type SkipCommands = "skipForward" | "skipBackward";
+
+type EventNameDataMap = Record<
+  "playTimeUpdate",
+  { currentTime: number; duration: number; isLive: boolean }
+> &
+  Record<NoArgEvents, {}> &
+  Record<SkipCommands, { interval: number }>;
 
 export interface AudioPluginPlugin {
   playList(options: { items: PlaylistItem[] }): void;
@@ -33,4 +38,13 @@ export interface NowPlayingInfo {
   title: string;
   artist: string;
   artwork?: string;
+  remoteCommands?: RemoteCommand[];
 }
+
+export type RemoteCommand =
+  | "pause"
+  | "nextTrack"
+  | "previousTrack"
+  | "play"
+  | "skipForward"
+  | "skipBackward";
