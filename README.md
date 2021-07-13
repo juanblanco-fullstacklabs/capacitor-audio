@@ -1,72 +1,67 @@
 # Capacitor Audio
 
-
 ## Introduction
 
 This is a simple but powerful Plugin for develop radio like Apps using Capacitor.
 
-[GitHub Repo](https://github.com/qingant/capacitor-audio)
-
+[GitHub Repo](https://github.com/justicointeractive/capacitor-audio)
 
 ## APIs
 
 ```javascript
 // Play a list of audio source
-Capacitor.Plugins.Audio.playList({
+AudioPlugin.playList({
   items: [
     {
-      src: '...'
+      src: "...",
     },
     {
-      src: '...'
-    }
-  ]
-})
+      src: "...",
+    },
+  ],
+});
 
 // Set Playing Info in Control center
-Capacitor.Plugins.Audio.setPlaying({
-  title: 'My Radio',
-  artist: "Ma Tao"
-})
+AudioPlugin.setPlaying({
+  title: "My Radio",
+  artist: "Ma Tao",
+  artwork: "https://example.s3.amazonaws.com/example.jpg",
+  remoteCommands: [
+    "pause",
+    "nextTrack",
+    "previousTrack",
+    "play",
+    "skipForward",
+    "skipBackward",
+  ],
+});
 
 // pause playing
-Capacitor.Plugins.Audio.pausePlay()
+AudioPlugin.pausePlay();
 
 //resume playing
-Capacitor.Plugins.Audio.resumePlay()
-
+AudioPlugin.resumePlay();
 ```
 
 Events
 
 ```javascript
 // trigger when one item of playlist play to endtime
-window.addEventListener('playEnd', () => {
-    console.log('PlayEndd')
-})
+AudioPlugin.addListener("playEnd", () => {
+  console.log("PlayEnd");
+});
 
 // trigger when one playlist all endtime
-window.addEventListener('playAllEnd', e => {
-
-})
+AudioPlugin.addListener("playAllEnd", () => {});
 // trigger when user request next in control center
-window.addEventListener('playNext', e => {
-
-})
+AudioPlugin.addListener("playNext", () => {});
 
 // trigger when user request prevous in control center
-window.addEventListener('playPrevious', e => {
-
-})
+AudioPlugin.addListener("playPrevious", () => {});
 
 // trigger when play paused (from control center)
-window.addEventListener('playPaused', e => {
-
-})
+AudioPlugin.addListener("playPaused", () => {});
 
 // trigger when play resumed (from control center)
-window.addEventListener('playResumed', e => {
-
-})
+AudioPlugin.addListener("playResumed", () => {});
 ```
-

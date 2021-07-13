@@ -10,7 +10,7 @@
     "watch": "tsc --watch",
     "prepare": "npm run build"
   },
-  "author": "qingant",
+  "author": "justicointeractive",
   "license": "MIT",
   "devDependencies": {
     "@capacitor/core": "^3.1.1",
@@ -39,9 +39,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/qingant/capacitor-audio"
+    "url": "github.com/justicointeractive/capacitor-audio"
   },
   "bugs": {
-    "url": "github.com/qingant/capacitor-audio/issues"
+    "url": "github.com/justicointeractive/capacitor-audio/issues"
   }
 }
