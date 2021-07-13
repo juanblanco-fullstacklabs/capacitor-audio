@@ -1,20 +1,143 @@
 package net.paoying.plugins.capacitor.audio;
 
+import android.os.Handler;
+
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 
-@NativePlugin()
+import org.json.JSONException;
+import org.json.JSONObject;
+
+@CapacitorPlugin(name = "Audio")
 public class AudioPlugin extends Plugin {
 
-    @PluginMethod()
-    public void echo(PluginCall call) {
-        String value = call.getString("value");
+  SimpleExoPlayer player;
 
-        JSObject ret = new JSObject();
-        ret.put("value", value);
-        call.success(ret);
+  public void load() {
+    player = new SimpleExoPlayer.Builder(this.getContext()).build();
+
+    player.addListener(new Player.Listener() {
+      @Override
+      public void onPlaybackStateChanged(int state) {
+        updateProgressBar();
+      }
+    });
+  }
+
+  Handler handler = new Handler();
+
+  private void updateProgressBar() {
+    boolean isLive = player.isCurrentWindowLive();
+    double durationSecs = isLive || player == null ? 0 : player.getDuration()/1000.0;
+    long positionMs = player == null ? 0 : player.getCurrentPosition();
+    double positionSecs = positionMs/1000.0;
+
+    JSObject data = new JSObject();
+    data.put("duration", durationSecs);
+    data.put("currentTime", positionSecs);
+    data.put("isLive", isLive);
+    notifyListeners("playTimeUpdate", data);
+    // Remove scheduled updates.
+    handler.removeCallbacks(updateProgressAction);
+    // Schedule an update if necessary.
+    int playbackState = player == null ? Player.STATE_IDLE : player.getPlaybackState();
+    if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+      long delayMs;
+      if (player.getPlayWhenReady() && playbackState == Player.STATE_READY) {
+        delayMs = 1000 - (positionMs % 1000);
+        if (delayMs < 200) {
+          delayMs += 1000;
+        }
+      } else {
+        delayMs = 1000;
+      }
+      handler.postDelayed(updateProgressAction, delayMs);
     }
+  }
+
+  private final Runnable updateProgressAction = new Runnable() {
+    @Override
+    public void run() {
+      updateProgressBar();
+    }
+  };
+
+  @PluginMethod()
+  public void playList(PluginCall call) {
+    JSArray value = call.getArray("items");
+
+    getBridge().executeOnMainThread(new Runnable() {
+      @Override
+      public void run() {
+
+       player.clearMediaItems();
+
+       try {
+         for( JSONObject item : value.<JSONObject>toList()) {
+           String src  = item.getString("src");
+           MediaItem mediaItem = MediaItem.fromUri(src);
+           player.addMediaItem(mediaItem);
+         }
+       } catch (JSONException ex) {
+         call.reject("unable to parse playlist");
+         return;
+       }
+
+       player.prepare();
+
+       player.play();
+
+       call.resolve();
+     }
+    });
+  }
+
+  @PluginMethod()
+  public void setPlaying(PluginCall call) {
+    // not implemented on android
+    call.resolve();
+  }
+
+  @PluginMethod()
+  public void pausePlay(PluginCall call) {
+    getBridge().executeOnMainThread(new Runnable() {
+      @Override
+      public void run() {
+        player.pause();
+        call.resolve();
+      }
+    });
+  }
+
+  @PluginMethod()
+  public void resumePlay(PluginCall call) {
+    getBridge().executeOnMainThread(new Runnable() {
+      @Override
+      public void run() {
+        player.play();
+        call.resolve();
+      }
+    });
+  }
+
+  @PluginMethod()
+  public void seek(PluginCall call) {
+    Double toSeconds = call.getDouble("to");
+    long toMs = (long)(toSeconds * 1000);
+    getBridge().executeOnMainThread(new Runnable() {
+      @Override
+      public void run() {
+        player.seekTo(toMs);
+        call.resolve();
+      }
+    });
+  }
 }
