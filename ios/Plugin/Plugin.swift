@@ -14,10 +14,11 @@ class Player: NSObject {
         self.player = player
         periodicTimeObserverHandle = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
             if (player.currentItem != nil) {
+                let isLive = CMTIME_IS_INDEFINITE(player.currentItem!.duration)
                 plugin.notifyListeners("playTimeUpdate", data: [
                     "currentTime": CMTimeGetSeconds(player.currentItem!.currentTime()),
-                    "duration": CMTimeGetSeconds(player.currentItem!.duration),
-                    "isLive": CMTIME_IS_INDEFINITE(player.currentItem!.duration)
+                    "duration": isLive ? 0 : CMTimeGetSeconds(player.currentItem!.duration),
+                    "isLive": isLive
                 ])
             }
         }
