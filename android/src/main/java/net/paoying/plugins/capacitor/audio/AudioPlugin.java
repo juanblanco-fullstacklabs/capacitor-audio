@@ -4,7 +4,6 @@ import android.os.Handler;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
-import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -20,6 +19,7 @@ import org.json.JSONObject;
 public class AudioPlugin extends Plugin {
 
   SimpleExoPlayer player;
+  AudioPluginNotificationManager audioPlayerNotificationManager;
 
   public void load() {
     player = new SimpleExoPlayer.Builder(this.getContext()).build();
@@ -30,6 +30,9 @@ public class AudioPlugin extends Plugin {
         updateProgressBar();
       }
     });
+
+    audioPlayerNotificationManager = new AudioPluginNotificationManager(getContext(), player);
+
   }
 
   Handler handler = new Handler();
@@ -63,81 +66,78 @@ public class AudioPlugin extends Plugin {
     }
   }
 
-  private final Runnable updateProgressAction = new Runnable() {
-    @Override
-    public void run() {
-      updateProgressBar();
-    }
-  };
+  private final Runnable updateProgressAction = this::updateProgressBar;
 
   @PluginMethod()
   public void playList(PluginCall call) {
     JSArray value = call.getArray("items");
 
-    getBridge().executeOnMainThread(new Runnable() {
-      @Override
-      public void run() {
+    getBridge().executeOnMainThread(() -> {
 
-       player.clearMediaItems();
+     player.clearMediaItems();
 
-       try {
-         for( JSONObject item : value.<JSONObject>toList()) {
-           String src  = item.getString("src");
-           MediaItem mediaItem = MediaItem.fromUri(src);
-           player.addMediaItem(mediaItem);
-         }
-       } catch (JSONException ex) {
-         call.reject("unable to parse playlist");
-         return;
+     try {
+       for( JSONObject item : value.<JSONObject>toList()) {
+         String src  = item.getString("src");
+         MediaItem mediaItem = MediaItem.fromUri(src);
+         player.addMediaItem(mediaItem);
        }
-
-       player.prepare();
-
-       player.play();
-
-       call.resolve();
+     } catch (JSONException ex) {
+       call.reject("unable to parse playlist");
+       return;
      }
-    });
+
+     player.prepare();
+
+     player.play();
+
+     call.resolve();
+   });
   }
+
 
   @PluginMethod()
   public void setPlaying(PluginCall call) {
-    // not implemented on android
+    String title = call.getString("title");
+    String artist = call.getString("artist");
+    String artwork = call.getString("artwork");
+
+    audioPlayerNotificationManager.setCurrentItem(
+      title,
+      artist,
+      artwork
+    );
+
     call.resolve();
   }
 
   @PluginMethod()
   public void pausePlay(PluginCall call) {
-    getBridge().executeOnMainThread(new Runnable() {
-      @Override
-      public void run() {
-        player.pause();
-        call.resolve();
-      }
+    getBridge().executeOnMainThread(() -> {
+      player.pause();
+      call.resolve();
     });
   }
 
   @PluginMethod()
   public void resumePlay(PluginCall call) {
-    getBridge().executeOnMainThread(new Runnable() {
-      @Override
-      public void run() {
-        player.play();
-        call.resolve();
-      }
+    getBridge().executeOnMainThread(() -> {
+      player.play();
+      call.resolve();
     });
   }
 
   @PluginMethod()
   public void seek(PluginCall call) {
     Double toSeconds = call.getDouble("to");
+    if (toSeconds == null) {
+      call.reject("missing time to seek to");
+      return;
+    }
     long toMs = (long)(toSeconds * 1000);
-    getBridge().executeOnMainThread(new Runnable() {
-      @Override
-      public void run() {
-        player.seekTo(toMs);
-        call.resolve();
-      }
+    getBridge().executeOnMainThread(() -> {
+      player.seekTo(toMs);
+      call.resolve();
     });
   }
 }
