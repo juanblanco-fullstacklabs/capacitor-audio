@@ -1,5 +1,7 @@
 package net.paoying.plugins.capacitor.audio;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -19,15 +21,31 @@ import java.util.Map;
 
 public class AudioPluginNotificationManager {
 
+  private final String CHANNEL_ID = "audio_notification";
+
   PlayerNotificationManager notificationManager;
   Map<String, Object> currentItem = new HashMap<>();
 
   AudioPluginNotificationManager(Context context, SimpleExoPlayer player) {
 
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      NotificationChannel channel = new NotificationChannel(
+        CHANNEL_ID,
+        "Media Controller",
+        NotificationManager.IMPORTANCE_LOW
+      );
+      channel.setDescription("A notification that allows you to control media playback");
+
+      NotificationManager systemNotificationManager = context.getSystemService(NotificationManager.class);
+      if (systemNotificationManager != null){
+        systemNotificationManager.createNotificationChannel(channel);
+      }
+    }
+
     notificationManager = new PlayerNotificationManager.Builder(
       context,
       1,
-      "audio_notification",
+      CHANNEL_ID,
       new PlayerNotificationManager.MediaDescriptionAdapter() {
         @Override
         public CharSequence getCurrentContentTitle(Player player) {
