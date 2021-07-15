@@ -1,4 +1,4 @@
-package net.paoying.plugins.capacitor.audio;
+package com.justicointeractive.plugins.capacitor.audio;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
