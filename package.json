@@ -46,6 +46,6 @@
     "url": "github.com/justicointeractive/capacitor-audio/issues"
   },
   "dependencies": {
-    "video.js": "^7.13.3"
+    "video.js": "^7.14.1"
   }
 }
