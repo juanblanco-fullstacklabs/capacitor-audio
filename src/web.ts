@@ -7,13 +7,6 @@ import type {
 } from "./definitions";
 
 export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
-  constructor() {
-    super({
-      name: "Audio",
-      platforms: ["web"],
-    });
-  }
-
   current?: VideoJsPlayer;
   currentIndex = 0;
   audios?: VideoJsPlayer[];
