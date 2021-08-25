@@ -4,6 +4,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -42,6 +44,25 @@ public class AudioPluginNotificationManager {
       }
     }
 
+    // get icon if exists com.google.firebase.messaging.default_notification_icon
+    ApplicationInfo applicationInfo = null;
+    int icon =
+      context.getResources()
+        .getIdentifier(
+          "ic_launcher",
+          "mipmap",
+          context.getPackageName());
+    try {
+      applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+      icon = applicationInfo.metaData.getInt(
+        "com.google.firebase.messaging.default_notification_icon",
+        applicationInfo.metaData.getInt(
+          "com.justicointeractive.plugins.capacitor.audio.notification_icon",
+          icon));
+    } catch (PackageManager.NameNotFoundException e) {
+      e.printStackTrace();
+    }
+
     notificationManager = new PlayerNotificationManager.Builder(
       context,
       1,
@@ -77,9 +98,7 @@ public class AudioPluginNotificationManager {
         }
       }
     )
-      .setSmallIconResourceId(
-        context.getResources()
-          .getIdentifier("ic_launcher", "mipmap", context.getPackageName()))
+      .setSmallIconResourceId(icon)
       .build();
 
     notificationManager.setPlayer(player);
