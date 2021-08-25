@@ -26,33 +26,33 @@ public class AudioPlugin extends Plugin {
 
     player.addListener(new Player.Listener() {
       @Override
-      public void onPlaybackStateChanged(int state) {
+      public void onIsPlayingChanged(boolean isPlaying) {
         updateProgressBar();
       }
     });
 
     audioPlayerNotificationManager = new AudioPluginNotificationManager(getContext(), player);
-
   }
 
   Handler handler = new Handler();
 
   private void updateProgressBar() {
-    boolean isLive = player.isCurrentWindowLive();
-    double durationSecs = isLive || player == null ? 0 : player.getDuration()/1000.0;
-    long positionMs = player == null ? 0 : player.getCurrentPosition();
-    double positionSecs = positionMs/1000.0;
-
-    JSObject data = new JSObject();
-    data.put("duration", durationSecs);
-    data.put("currentTime", positionSecs);
-    data.put("isLive", isLive);
-    notifyListeners("playTimeUpdate", data);
     // Remove scheduled updates.
     handler.removeCallbacks(updateProgressAction);
     // Schedule an update if necessary.
     int playbackState = player == null ? Player.STATE_IDLE : player.getPlaybackState();
-    if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+    if (playbackState == Player.STATE_READY) {
+      boolean isLive = player.isCurrentWindowLive();
+      double durationSecs = isLive || player == null ? 0 : player.getDuration()/1000.0;
+      long positionMs = player == null ? 0 : player.getCurrentPosition();
+      double positionSecs = positionMs/1000.0;
+
+      JSObject data = new JSObject();
+      data.put("duration", durationSecs);
+      data.put("currentTime", positionSecs);
+      data.put("isLive", isLive);
+      notifyListeners("playTimeUpdate", data);
+
       long delayMs;
       if (player.getPlayWhenReady() && playbackState == Player.STATE_READY) {
         delayMs = 1000 - (positionMs % 1000);
@@ -90,6 +90,8 @@ public class AudioPlugin extends Plugin {
      player.prepare();
 
      player.play();
+
+     player.seekTo(0);
 
      call.resolve();
    });
