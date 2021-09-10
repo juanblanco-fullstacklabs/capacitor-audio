@@ -1,22 +1,18 @@
 package com.justicointeractive.plugins.capacitor.audio;
 
 import android.Manifest;
-import android.os.Handler;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 
-import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @CapacitorPlugin(
   name = "Audio",
@@ -26,141 +22,78 @@ import org.json.JSONObject;
       alias = "network"
     ),
     @Permission(
-      strings = { Manifest.permission.INTERNET }, 
+      strings = { Manifest.permission.INTERNET },
       alias = "internet"
     ),
     @Permission(
       strings = { Manifest.permission.WAKE_LOCK },
       alias = "wakelock"
     ),
+    @Permission(
+      strings = { Manifest.permission.FOREGROUND_SERVICE },
+      alias = "foregroundserivice"
+    ),
   }
 )
 public class AudioPlugin extends Plugin {
 
-  SimpleExoPlayer player;
-  AudioPluginNotificationManager audioPlayerNotificationManager;
+  private AudioPluginService service;
 
   public void load() {
-    player = new SimpleExoPlayer.Builder(this.getContext())
-      .setWakeMode(C.WAKE_MODE_NETWORK)
-      .build();
 
-    player.addListener(new Player.Listener() {
+    Intent serviceIntent = new Intent(this.getContext(), AudioPluginService.class);
+    this.getContext().bindService(serviceIntent, new ServiceConnection() {
       @Override
-      public void onIsPlayingChanged(boolean isPlaying) {
-        updateProgressBar();
+      public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        AudioPluginService.AudioPluginServiceBinder binder =
+          (AudioPluginService.AudioPluginServiceBinder)iBinder;
+        binder.setPluginInstance(AudioPlugin.this);
+        service = binder.getService();
       }
-    });
 
-    audioPlayerNotificationManager = new AudioPluginNotificationManager(getContext(), player);
+      @Override
+      public void onServiceDisconnected(ComponentName componentName) {
+        service = null;
+      }
+    }, Context.BIND_AUTO_CREATE);
+
   }
 
-  Handler handler = new Handler();
-
-  private void updateProgressBar() {
-    // Remove scheduled updates.
-    handler.removeCallbacks(updateProgressAction);
-    // Schedule an update if necessary.
-    int playbackState = player == null ? Player.STATE_IDLE : player.getPlaybackState();
-    if (playbackState == Player.STATE_READY) {
-      boolean isLive = player.isCurrentWindowLive();
-      double durationSecs = isLive || player == null ? 0 : player.getDuration()/1000.0;
-      long positionMs = player == null ? 0 : player.getCurrentPosition();
-      double positionSecs = positionMs/1000.0;
-
-      JSObject data = new JSObject();
-      data.put("duration", durationSecs);
-      data.put("currentTime", positionSecs);
-      data.put("isLive", isLive);
-      notifyListeners("playTimeUpdate", data);
-
-      long delayMs;
-      if (player.getPlayWhenReady() && playbackState == Player.STATE_READY) {
-        delayMs = 1000 - (positionMs % 1000);
-        if (delayMs < 200) {
-          delayMs += 1000;
-        }
-      } else {
-        delayMs = 1000;
-      }
-      handler.postDelayed(updateProgressAction, delayMs);
-    }
+  @Override
+  public void notifyListeners(String eventName, JSObject data) {
+    super.notifyListeners(eventName, data);
   }
-
-  private final Runnable updateProgressAction = this::updateProgressBar;
 
   @PluginMethod()
   public void playList(PluginCall call) {
-    JSArray value = call.getArray("items");
-
     getBridge().executeOnMainThread(() -> {
-
-     player.clearMediaItems();
-
-     try {
-       for( JSONObject item : value.<JSONObject>toList()) {
-         String src  = item.getString("src");
-         MediaItem mediaItem = MediaItem.fromUri(src);
-         player.addMediaItem(mediaItem);
-       }
-     } catch (JSONException ex) {
-       call.reject("unable to parse playlist");
-       return;
-     }
-
-     player.prepare();
-
-     player.play();
-
-     player.seekTo(0);
-
-     call.resolve();
+      service.playList(call);
    });
   }
 
-
   @PluginMethod()
   public void setPlaying(PluginCall call) {
-    String title = call.getString("title");
-    String artist = call.getString("artist");
-    String artwork = call.getString("artwork");
-
-    audioPlayerNotificationManager.setCurrentItem(
-      title,
-      artist,
-      artwork
-    );
-
-    call.resolve();
+    service.setPlaying(call);
   }
 
   @PluginMethod()
   public void pausePlay(PluginCall call) {
     getBridge().executeOnMainThread(() -> {
-      player.pause();
-      call.resolve();
+      service.pausePlay(call);
     });
   }
 
   @PluginMethod()
   public void resumePlay(PluginCall call) {
     getBridge().executeOnMainThread(() -> {
-      player.play();
-      call.resolve();
+      service.resumePlay(call);
     });
   }
 
   @PluginMethod()
   public void seek(PluginCall call) {
-    Double toSeconds = call.getDouble("to");
-    if (toSeconds == null) {
-      call.reject("missing time to seek to");
-      return;
-    }
-    long toMs = (long)(toSeconds * 1000);
     getBridge().executeOnMainThread(() -> {
-      player.seekTo(toMs);
-      call.resolve();
+      service.seek(call);
     });
   }
 }

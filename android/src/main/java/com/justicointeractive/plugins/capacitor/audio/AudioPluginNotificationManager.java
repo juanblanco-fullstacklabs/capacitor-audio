@@ -28,7 +28,7 @@ public class AudioPluginNotificationManager {
   PlayerNotificationManager notificationManager;
   Map<String, Object> currentItem = new HashMap<>();
 
-  AudioPluginNotificationManager(Context context, SimpleExoPlayer player) {
+  AudioPluginNotificationManager(Context context, SimpleExoPlayer player,  PlayerNotificationManager.NotificationListener playerNotificationListener) {
 
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
       NotificationChannel channel = new NotificationChannel(
@@ -99,6 +99,7 @@ public class AudioPluginNotificationManager {
       }
     )
       .setSmallIconResourceId(icon)
+      .setNotificationListener(playerNotificationListener)
       .build();
 
     notificationManager.setPlayer(player);
