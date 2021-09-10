@@ -8,6 +8,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import androidx.annotation.Nullable;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class AudioPluginNotificationManager {
 
   private final String CHANNEL_ID = "audio_notification";
+  private final MediaSessionCompat mediaSessionCompat;
 
   PlayerNotificationManager notificationManager;
   Map<String, Object> currentItem = new HashMap<>();
@@ -103,13 +105,17 @@ public class AudioPluginNotificationManager {
       .build();
 
     notificationManager.setPlayer(player);
-    MediaSessionCompat mediaSessionCompat = new MediaSessionCompat( context, "tag");
+    mediaSessionCompat = new MediaSessionCompat( context, "tag");
     notificationManager.setMediaSessionToken(mediaSessionCompat.getSessionToken());
   }
 
   public void setCurrentItem(String title, String artist, String artwork) {
+    MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
+
     currentItem.put("title", title);
+    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, title);
     currentItem.put("artist", artist);
+    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist);
 
     if (artwork != null) {
       Bitmap artworkBitmap = null;
@@ -119,8 +125,10 @@ public class AudioPluginNotificationManager {
         e.printStackTrace();
       }
       currentItem.put("artwork", artworkBitmap);
+      metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, artworkBitmap);
     }
 
     notificationManager.invalidate();
+    mediaSessionCompat.setMetadata(metadataBuilder.build());
   }
 }
