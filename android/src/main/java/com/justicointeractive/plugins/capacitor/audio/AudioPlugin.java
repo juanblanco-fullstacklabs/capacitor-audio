@@ -1,5 +1,6 @@
 package com.justicointeractive.plugins.capacitor.audio;
 
+import android.Manifest;
 import android.os.Handler;
 
 import com.getcapacitor.JSArray;
@@ -8,6 +9,8 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -15,14 +18,32 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-@CapacitorPlugin(name = "Audio")
+@CapacitorPlugin(
+  name = "Audio",
+  permissions = {
+    @Permission(
+      strings = { Manifest.permission.ACCESS_NETWORK_STATE },
+      alias = "network"
+    ),
+    @Permission(
+      strings = { Manifest.permission.INTERNET }, 
+      alias = "internet"
+    ),
+    @Permission(
+      strings = { Manifest.permission.WAKE_LOCK },
+      alias = "wakelock"
+    ),
+  }
+)
 public class AudioPlugin extends Plugin {
 
   SimpleExoPlayer player;
   AudioPluginNotificationManager audioPlayerNotificationManager;
 
   public void load() {
-    player = new SimpleExoPlayer.Builder(this.getContext()).build();
+    player = new SimpleExoPlayer.Builder(this.getContext())
+      .setWakeMode(C.WAKE_MODE_NETWORK)
+      .build();
 
     player.addListener(new Player.Listener() {
       @Override
