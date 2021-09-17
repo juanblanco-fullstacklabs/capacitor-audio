@@ -7,9 +7,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaSessionCompat;
 
 import androidx.annotation.Nullable;
 
@@ -17,20 +14,16 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
 public class AudioPluginNotificationManager {
 
+  AudioPluginService service;
+
   private final String CHANNEL_ID = "audio_notification";
-  private final MediaSessionCompat mediaSessionCompat;
 
   PlayerNotificationManager notificationManager;
-  Map<String, Object> currentItem = new HashMap<>();
 
-  AudioPluginNotificationManager(Context context, SimpleExoPlayer player,  PlayerNotificationManager.NotificationListener playerNotificationListener) {
+  AudioPluginNotificationManager(Context context, SimpleExoPlayer player, AudioPluginService service, PlayerNotificationManager.NotificationListener playerNotificationListener) {
+    this.service = service;
 
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
       NotificationChannel channel = new NotificationChannel(
@@ -72,7 +65,7 @@ public class AudioPluginNotificationManager {
       new PlayerNotificationManager.MediaDescriptionAdapter() {
         @Override
         public CharSequence getCurrentContentTitle(Player player) {
-          return (String)currentItem.get("title");
+          return (String)service.currentItem.get("title");
         }
 
         @Nullable
@@ -90,13 +83,13 @@ public class AudioPluginNotificationManager {
         @Nullable
         @Override
         public CharSequence getCurrentContentText(Player player) {
-          return (String)currentItem.get("artist");
+          return (String)service.currentItem.get("artist");
         }
 
         @Nullable
         @Override
         public Bitmap getCurrentLargeIcon(Player player, PlayerNotificationManager.BitmapCallback callback) {
-          return (Bitmap)currentItem.get("artwork");
+          return (Bitmap)service.currentItem.get("artwork");
         }
       }
     )
@@ -105,30 +98,6 @@ public class AudioPluginNotificationManager {
       .build();
 
     notificationManager.setPlayer(player);
-    mediaSessionCompat = new MediaSessionCompat( context, "tag");
-    notificationManager.setMediaSessionToken(mediaSessionCompat.getSessionToken());
-  }
-
-  public void setCurrentItem(String title, String artist, String artwork) {
-    MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
-
-    currentItem.put("title", title);
-    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, title);
-    currentItem.put("artist", artist);
-    metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist);
-
-    if (artwork != null) {
-      Bitmap artworkBitmap = null;
-      try {
-        artworkBitmap = BitmapFactory.decodeStream(new URL(artwork).openStream());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      currentItem.put("artwork", artworkBitmap);
-      metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, artworkBitmap);
-    }
-
-    notificationManager.invalidate();
-    mediaSessionCompat.setMetadata(metadataBuilder.build());
+    notificationManager.setMediaSessionToken(service.mediaSession.getSessionToken());
   }
 }
