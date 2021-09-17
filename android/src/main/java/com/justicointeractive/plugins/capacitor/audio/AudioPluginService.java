@@ -23,7 +23,6 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
-import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 
 import org.json.JSONException;
 import org.json.JSONObject;
