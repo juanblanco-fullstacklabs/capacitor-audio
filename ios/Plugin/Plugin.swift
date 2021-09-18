@@ -156,12 +156,13 @@ public class AudioPlugin: CAPPlugin {
         if (artwork != nil) {
             let artworkUrl = URL(string: artwork!)!
             URLSession.shared.dataTask(with: artworkUrl, completionHandler: {(data, response, error) in
-                let image =  UIImage(data: data!)!
-                let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ -> UIImage in
-                    return image
-                })
-                nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-                MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+                if let imageData = data, let image = UIImage(data: imageData) {
+                    let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ -> UIImage in
+                        return image
+                    })
+                    nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+                }
             }).resume()
         }
         
