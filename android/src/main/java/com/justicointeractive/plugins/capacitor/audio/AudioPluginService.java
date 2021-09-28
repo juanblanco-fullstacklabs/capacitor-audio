@@ -2,6 +2,7 @@ package com.justicointeractive.plugins.capacitor.audio;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -28,6 +29,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,6 +70,15 @@ public class AudioPluginService extends Service {
         item.put("artwork", extras.getString("artwork"));
         items.add(item);
         AudioPluginService.this.playList(items);
+
+        if (extras.get("car_app_type") != null) {
+          Bundle selectContentParameters = new Bundle();
+          selectContentParameters.putString("content_type", extras.getString("contentType"));
+          selectContentParameters.putString("item_id", extras.getString("itemId"));
+          selectContentParameters.putString("car_app_type", extras.getString("car_app_type"));
+          logEventIfFirebaseAnalyticsIsAvailable("select_content", selectContentParameters);
+        }
+
         new Thread(() -> {
           try {
             AudioPluginService.this.setPlaying(item);
@@ -277,5 +289,23 @@ public class AudioPluginService extends Service {
 
     audioPlayerNotificationManager.notificationManager.invalidate();
     mediaSession.setMetadata(metadataBuilder.build());
+  }
+
+  public void logEventIfFirebaseAnalyticsIsAvailable(String name, Bundle parameters) {
+    try {
+      Class firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
+      Method firebaseAnalyticsGetInstanceMethod = firebaseAnalyticsClass.getMethod("getInstance", Context.class);
+      Object firebaseAnalyticsInstance = firebaseAnalyticsGetInstanceMethod.invoke(null, this.getApplicationContext());
+      Method logEventMethod = firebaseAnalyticsClass.getMethod("logEvent", String.class, Bundle.class);
+      logEventMethod.invoke(firebaseAnalyticsInstance, name, parameters);
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
   }
 }
