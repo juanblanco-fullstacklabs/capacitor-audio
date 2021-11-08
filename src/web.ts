@@ -74,6 +74,10 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
     return new Promise<void>((r) => r());
   }
 
+  async setSearchUrl() {
+    // not implemented
+  }
+
   async seek(options: { to: number }): Promise<void> {
     if (this.current) {
       if (options != null) {

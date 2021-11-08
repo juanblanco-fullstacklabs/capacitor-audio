@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 
 import com.getcapacitor.JSObject;
@@ -95,5 +96,16 @@ public class AudioPlugin extends Plugin {
     getBridge().executeOnMainThread(() -> {
       service.seek(call);
     });
+  }
+
+  @PluginMethod
+  public void setSearchUrl(PluginCall call) {
+    String url = call.getString("url");
+
+    SharedPreferences sharedPreferences = this.getContext().getSharedPreferences("audioPlugin", Context.MODE_PRIVATE);
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putString("audioSearchUrl", url);
+    editor.apply();
+    call.resolve();
   }
 }

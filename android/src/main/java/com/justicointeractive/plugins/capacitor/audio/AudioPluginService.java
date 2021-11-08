@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -15,6 +16,10 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
@@ -25,13 +30,16 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +51,8 @@ public class AudioPluginService extends Service {
   public MediaSessionCompat mediaSession;
   Map<String, Object> currentItem = new HashMap<>();
   AudioPlugin plugin;
+  RequestQueue requestQueue;
+  Handler mainHandler;
 
   private final AudioPluginServiceBinder binder = new AudioPluginServiceBinder();
 
@@ -93,6 +103,61 @@ public class AudioPluginService extends Service {
     }
 
     @Override
+    public void onPlayFromSearch(String query, Bundle extras) {
+      SharedPreferences prefs = AudioPluginService.this.getApplicationContext().getSharedPreferences("audioPlugin", Context.MODE_PRIVATE);
+      String rootUrl = prefs.getString("audioSearchUrl", null);
+      JsonObjectRequest request = null;
+      try {
+        request = new JsonObjectRequest(
+          Request.Method.GET,
+          rootUrl.replace(URLEncoder.encode("$QUERY", "utf-8"), URLEncoder.encode(query, "utf-8")),
+          null,
+          response -> {
+            new Thread(() -> {
+              try {
+                ArrayList<JSONObject> playList = new ArrayList<>();
+                JSONArray items = response.getJSONArray("items");
+                for (int itemIndex = 0; itemIndex < items.length(); itemIndex++) {
+                  JSONObject item = items.getJSONObject(itemIndex);
+
+                  String itemUrl = item.has("url") ? item.getString("url") : null;
+
+                  if (itemUrl == null || itemUrl.length() == 0) {
+                    continue;
+                  }
+
+                  JSONObject playListItem = new JSONObject();
+                  playListItem.put("src", itemUrl);
+                  playListItem.put("title", item.getString("title"));
+                  playListItem.put("artist", item.getString("description"));
+                  playListItem.put("artwork", item.getString("imageUrl"));
+                  playList.add(playListItem);
+                }
+                mainHandler.post(() -> {
+                  try {
+                    AudioPluginService.this.playList(playList);
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                });
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+
+
+            }).start();
+          },
+          error -> {
+            error.printStackTrace();
+          }
+        );
+      } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+      }
+      requestQueue.add(request);
+    }
+
+    @Override
     public void onPlay() {
       AudioPluginService.this.player.play();
     }
@@ -101,11 +166,31 @@ public class AudioPluginService extends Service {
     public void onPause() {
       AudioPluginService.this.player.pause();
     }
+
+    @Override
+    public void onStop() {
+      AudioPluginService.this.player.stop();
+    }
+
+    @Override
+    public void onSkipToNext() {
+      AudioPluginService.this.player.next();
+    }
+
+    @Override
+    public void onSkipToPrevious() {
+      AudioPluginService.this.player.previous();
+    }
   }
 
   @Override
   public void onCreate() {
     super.onCreate();
+
+    requestQueue = Volley.newRequestQueue(this.getApplicationContext());
+
+    mainHandler = new Handler(this.getMainLooper());
+
     player = new SimpleExoPlayer.Builder(this.getApplicationContext())
       .setWakeMode(C.WAKE_MODE_NETWORK)
       .setAudioAttributes(new AudioAttributes.Builder()

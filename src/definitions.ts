@@ -23,6 +23,7 @@ export interface AudioPluginPlugin {
   pausePlay(): void;
   resumePlay(): void;
   seek(options?: { to: number }): Promise<void>;
+  setSearchUrl(options: { url: string }): Promise<void>;
 
   addListener<EventName extends keyof EventNameDataMap>(
     eventName: EventName,

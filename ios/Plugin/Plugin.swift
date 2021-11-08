@@ -217,4 +217,9 @@ public class AudioPlugin: CAPPlugin {
     func currentTime() -> Double {
         return CMTimeGetSeconds(self.audioPlayer!.player.currentTime())
     }
+    
+    @objc func setSearchUrl(_ call: CAPPluginCall) {
+        // not implemented
+        call.resolve()
+    }
 }
