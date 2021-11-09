@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,6 +26,7 @@ import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.MediaMetadata;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -215,6 +217,17 @@ public class AudioPluginService extends Service {
                 .setState(isPlaying ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED, player.getCurrentPosition(), player.getPlaybackParameters().speed)
                 .setActions(PlaybackStateCompat.ACTION_PLAY|PlaybackStateCompat.ACTION_PAUSE)
                 .build());
+
+        MediaItem currentItem = player.getCurrentMediaItem();
+        if (currentItem != null) {
+          new Thread(() -> {
+            AudioPluginService.this.setCurrentItem(
+                    currentItem.mediaMetadata.title.toString(),
+                    currentItem.mediaMetadata.artist.toString(),
+                    currentItem.mediaMetadata.artworkUri.toString()
+            );
+          }).start();
+        }
       }
     });
 
@@ -260,7 +273,9 @@ public class AudioPluginService extends Service {
       data.put("duration", durationSecs);
       data.put("currentTime", positionSecs);
       data.put("isLive", isLive);
-      plugin.notifyListeners("playTimeUpdate", data);
+      if (plugin != null) {
+        plugin.notifyListeners("playTimeUpdate", data);
+      }
 
       long delayMs;
       if (player.getPlayWhenReady() && playbackState == Player.STATE_READY) {
@@ -293,7 +308,15 @@ public class AudioPluginService extends Service {
 
     for( JSONObject item : items) {
       String src  = item.getString("src");
-      MediaItem mediaItem = MediaItem.fromUri(src);
+      MediaItem mediaItem = new MediaItem.Builder()
+              .setUri(src)
+              .setMediaMetadata(new MediaMetadata.Builder()
+                      .setTitle(item.getString("title"))
+                      .setArtworkUri(Uri.parse(item.getString("artwork")))
+                      .setArtist(item.getString("artist"))
+                      .build()
+              )
+              .build();
       player.addMediaItem(mediaItem);
     }
 
