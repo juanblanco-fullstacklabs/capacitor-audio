@@ -21,6 +21,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.getcapacitor.CapConfig;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
@@ -106,8 +107,10 @@ public class AudioPluginService extends Service {
 
     @Override
     public void onPlayFromSearch(String query, Bundle extras) {
+      CapConfig capConfig = CapConfig.loadDefault(AudioPluginService.this.getApplicationContext());
+      String defaultRootUrl = capConfig.getPluginConfiguration("capacitor-audio").getString("audioSearchUrl", null);
       SharedPreferences prefs = AudioPluginService.this.getApplicationContext().getSharedPreferences("audioPlugin", Context.MODE_PRIVATE);
-      String rootUrl = prefs.getString("audioSearchUrl", null);
+      String rootUrl = prefs.getString("audioSearchUrl", defaultRootUrl);
       JsonObjectRequest request = null;
       try {
         request = new JsonObjectRequest(
