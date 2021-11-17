@@ -311,22 +311,28 @@ public class AudioPluginService extends Service {
 
     for( JSONObject item : items) {
       String src  = item.getString("src");
-      MediaItem.Builder mediaItemBuilder = new MediaItem.Builder()
-        .setUri(src);
+
+      MediaMetadata.Builder metadataBuilder = new MediaMetadata.Builder();
 
       if (item.has("title")) {
-        mediaItemBuilder
-          .setMediaMetadata(new MediaMetadata.Builder()
-            .setTitle(item.getString("title"))
-            .setArtworkUri(Uri.parse(item.getString("artwork")))
-            .setArtist(item.getString("artist"))
-            .build()
-          );
+        metadataBuilder.setTitle(item.getString("title"));
+      }
+      if (item.has("artist")) {
+        metadataBuilder.setArtist(item.getString("artist"));
+      }
+      if (item.has("album")) {
+        metadataBuilder.setAlbumTitle(item.getString("album"));
+      }
+      if (item.has("artwork")) {
+        metadataBuilder.setArtworkUri(Uri.parse(item.getString("artwork")));
       }
 
-      MediaItem mediaItem = mediaItemBuilder.build();
-
-      player.addMediaItem(mediaItem);
+      player.addMediaItem(
+        new MediaItem.Builder()
+          .setUri(src)
+          .setMediaMetadata(metadataBuilder.build())
+          .build()
+      );
     }
 
     player.prepare();
