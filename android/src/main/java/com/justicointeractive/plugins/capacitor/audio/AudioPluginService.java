@@ -222,7 +222,7 @@ public class AudioPluginService extends Service {
                 .build());
 
         MediaItem currentItem = player.getCurrentMediaItem();
-        if (currentItem != null) {
+        if (currentItem != null && currentItem.mediaMetadata != null && currentItem.mediaMetadata.title != null) {
           new Thread(() -> {
             AudioPluginService.this.setCurrentItem(
                     currentItem.mediaMetadata.title.toString(),
@@ -311,15 +311,21 @@ public class AudioPluginService extends Service {
 
     for( JSONObject item : items) {
       String src  = item.getString("src");
-      MediaItem mediaItem = new MediaItem.Builder()
-              .setUri(src)
-              .setMediaMetadata(new MediaMetadata.Builder()
-                      .setTitle(item.getString("title"))
-                      .setArtworkUri(Uri.parse(item.getString("artwork")))
-                      .setArtist(item.getString("artist"))
-                      .build()
-              )
-              .build();
+      MediaItem.Builder mediaItemBuilder = new MediaItem.Builder()
+        .setUri(src);
+
+      if (item.has("title")) {
+        mediaItemBuilder
+          .setMediaMetadata(new MediaMetadata.Builder()
+            .setTitle(item.getString("title"))
+            .setArtworkUri(Uri.parse(item.getString("artwork")))
+            .setArtist(item.getString("artist"))
+            .build()
+          );
+      }
+
+      MediaItem mediaItem = mediaItemBuilder.build();
+
       player.addMediaItem(mediaItem);
     }
 
