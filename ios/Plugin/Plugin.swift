@@ -138,8 +138,77 @@ public class AudioPlugin: CAPPlugin {
             
             let notify = NotificationCenter.default
             notify.addObserver(self, selector: #selector(self.onPlayEnd), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+            notify.addObserver(self, selector: #selector(self.handleInterruption), name: AVAudioSession.interruptionNotification, object: nil)
+            notify.addObserver(self, selector: #selector(self.handleRouteChange), name: AVAudioSession.routeChangeNotification, object: nil)
         }
         self.isInited = true
+    }
+    
+    @objc func handleRouteChange(notification:Notification) {
+        NSLog("handleRouteChange")
+        guard  let userInfo = notification.userInfo,
+               let typeValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+               let type = AVAudioSession.RouteChangeReason(rawValue: typeValue) else {
+                   return
+               }
+        switch type {
+        case .categoryChange:
+            NSLog("handleRouteChange categoryChange")
+        
+        case .newDeviceAvailable:
+            NSLog("handleRouteChange newDeviceAvailable")
+        
+        case .noSuitableRouteForCategory:
+            NSLog("handleRouteChange noSuitableRouteForCategory")
+        
+        case .oldDeviceUnavailable:
+            NSLog("handleRouteChange oldDeviceUnavailable")
+        
+        case .override:
+            NSLog("handleRouteChange override")
+        
+        case .routeConfigurationChange:
+            NSLog("handleRouteChange routeConfigurationChange")
+        
+        case .unknown:
+            NSLog("handleRouteChange unknown")
+        
+        case .wakeFromSleep:
+            NSLog("handleRouteChange wakeFromSleep")
+        default:
+            NSLog("handleRouteChange default")
+        }
+    }
+    
+    @objc func handleInterruption(notification: Notification) {
+        NSLog("handleInterruption")
+        guard  let userInfo = notification.userInfo,
+               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                   return
+               }
+        
+        switch type {
+            
+        case .began:
+            NSLog("handleInterruption.begin")
+            self.notifyListeners("playPaused", data: [:])
+            
+        case .ended:
+            NSLog("handleInterruption.ended")
+            
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                NSLog("handleInterruption.ended shouldResume")
+                self.audioPlayer?.play()
+                self.notifyListeners("playResumed", data: [:])
+            } else {
+                NSLog("handleInterruption.ended !shouldResume")
+            }
+            
+        default: ()
+        }
     }
     
     @objc func setPlaying(_ call: CAPPluginCall) {
