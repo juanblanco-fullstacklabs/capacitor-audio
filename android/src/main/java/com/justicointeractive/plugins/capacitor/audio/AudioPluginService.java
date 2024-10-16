@@ -189,6 +189,12 @@ public class AudioPluginService extends Service {
   }
 
   @Override
+  public void onDestroy() {
+    AudioPluginService.this.player.stop();
+    super.onDestroy();
+  }
+
+  @Override
   public void onCreate() {
     super.onCreate();
 
