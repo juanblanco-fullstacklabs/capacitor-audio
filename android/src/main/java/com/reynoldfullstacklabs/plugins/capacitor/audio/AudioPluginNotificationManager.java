@@ -1,4 +1,4 @@
-package com.justicointeractive.plugins.capacitor.audio;
+package com.reynoldfullstacklabs.plugins.capacitor.audio;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -52,7 +52,7 @@ public class AudioPluginNotificationManager {
       icon = applicationInfo.metaData.getInt(
         "com.google.firebase.messaging.default_notification_icon",
         applicationInfo.metaData.getInt(
-          "com.justicointeractive.plugins.capacitor.audio.notification_icon",
+          "com.reynoldfullstacklabs.plugins.capacitor.audio.notification_icon",
           icon));
     } catch (PackageManager.NameNotFoundException e) {
       e.printStackTrace();

@@ -4,7 +4,7 @@
 
 This is a simple but powerful Plugin for develop radio like Apps using Capacitor.
 
-[GitHub Repo](https://github.com/justicointeractive/capacitor-audio)
+[GitHub Repo](https://github.com/reynoldfullstacklabs/capacitor-audio)
 
 ## APIs
 

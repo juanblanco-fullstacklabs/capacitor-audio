@@ -1,4 +1,4 @@
-package com.justicointeractive.plugins.capacitor.audio;
+package com.reynoldfullstacklabs.plugins.capacitor.audio;
 
 import android.Manifest;
 import android.content.ComponentName;
