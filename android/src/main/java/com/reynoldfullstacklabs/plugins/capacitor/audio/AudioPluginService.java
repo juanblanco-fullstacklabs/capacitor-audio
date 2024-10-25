@@ -206,7 +206,7 @@ public class AudioPluginService extends Service {
       .setWakeMode(C.WAKE_MODE_NETWORK)
       .setAudioAttributes(new AudioAttributes.Builder()
               .setUsage(C.USAGE_MEDIA)
-              .setContentType(C.CONTENT_TYPE_MUSIC)
+              .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
               .build(), true)
       .build();
 

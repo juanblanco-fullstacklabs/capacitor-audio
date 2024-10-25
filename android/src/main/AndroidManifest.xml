@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.reynoldfullstacklabs.plugins.capacitor.audio">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application>
         <service
-            android:name=".AudioPluginService"
-            android:enabled="true"
-            android:exported="true"></service>
+          android:name=".AudioPluginService"
+          android:label="Service"
+          android:foregroundServiceType="mediaPlayback"
+          android:enabled="true"
+          />
     </application>
-
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 </manifest>
