@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.MediaMetadata;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 
@@ -273,15 +274,27 @@ public class AudioPluginService extends Service {
     // Schedule an update if necessary.
     int playbackState = player == null ? Player.STATE_IDLE : player.getPlaybackState();
     if (playbackState == Player.STATE_READY) {
-      boolean isLive = player.isCurrentWindowLive();
-      double durationSecs = isLive || player == null ? 0 : player.getDuration()/1000.0;
+      Timeline.Window window = new Timeline.Window();
+      Timeline.Window currentWindow = player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), window);
+      boolean isSeekable = currentWindow.isSeekable;
+
+      boolean isLive = currentWindow.isLive();
+      double durationSecs = player.getDuration() / 1000.0;
       long positionMs = player == null ? 0 : player.getCurrentPosition();
-      double positionSecs = positionMs/1000.0;
+      double positionSecs = positionMs / 1000.0;
+      double windowStart = (currentWindow.getDefaultPositionMs() - currentWindow.getDurationMs()) / 1000.0;
+      double windowEnd = currentWindow.getDefaultPositionMs() / 1000.0;
+      double dvrDuration = currentWindow.getDurationMs() / 1000.0;
 
       JSObject data = new JSObject();
       data.put("duration", durationSecs);
       data.put("currentTime", positionSecs);
       data.put("isLive", isLive);
+      data.put("isSeekable", isSeekable);
+      data.put("seekableRangeStart", windowStart);
+      data.put("seekableRangeDuration", windowEnd);
+      data.put("dvrDuration", dvrDuration);
+
       if (plugin != null) {
         plugin.notifyListeners("playTimeUpdate", data);
       }

@@ -8,20 +8,34 @@ class Player: NSObject {
     var player: AVQueuePlayer
     var periodicTimeObserverHandle: Any
     
-    init(items: [AVPlayerItem], plugin: CAPPlugin) {
+init(items: [AVPlayerItem], plugin: CAPPlugin) {
         self.playItems = items
         let player = AVQueuePlayer(items: items)
         self.player = player
         periodicTimeObserverHandle = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { _ in
             if let currentItem = player.currentItem {
-                let isLive = CMTIME_IS_INDEFINITE(currentItem.duration)
+                var isSeekable = false
                 let currentTime = CMTimeGetSeconds(currentItem.currentTime())
-                let duration = isLive ? 0 : CMTimeGetSeconds(currentItem.duration)
+                let isLive = CMTIME_IS_INDEFINITE(currentItem.duration)
+                var seekableRangeStart: Float64 = 0.0
+                var seekableRangeDuration: Float64 = 0.0
+                
+                if let seekableRange = player.currentItem?.seekableTimeRanges.first?.timeRangeValue {                  
+                    seekableRangeStart = CMTimeGetSeconds(seekableRange.start)
+                    seekableRangeDuration = CMTimeGetSeconds(seekableRange.duration)
+                    isSeekable = seekableRangeDuration > 0
+                }
+                
+                let duration = currentItem.duration.seconds > 0.0 ? CMTimeGetSeconds(currentItem.duration) : 0.0
                 
                 plugin.notifyListeners("playTimeUpdate", data: [
                     "currentTime": currentTime,
                     "duration": duration,
-                    "isLive": isLive
+                    "isLive": isLive,
+                    "isSeekable": isSeekable,
+                    "seekableRangeStart": seekableRangeStart,
+                    "seekableRangeDuration": seekableRangeDuration,
+                    "dvrDuration": seekableRangeDuration,
                 ])
                 
                 var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo

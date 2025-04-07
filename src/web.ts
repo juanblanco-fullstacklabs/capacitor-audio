@@ -56,6 +56,7 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
         currentTime: this.current?.currentTime(),
         duration: this.current?.duration(),
         isLive: this.current?.liveTracker.isLive(),
+        isSeekable: true,
       });
     });
     this.current && this.current.play();

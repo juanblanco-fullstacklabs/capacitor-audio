@@ -12,7 +12,7 @@ type SkipCommands = "skipForward" | "skipBackward";
 
 type EventNameDataMap = Record<
   "playTimeUpdate",
-  { currentTime: number; duration: number; isLive: boolean }
+  { currentTime: number; duration: number; isLive: boolean, isSeekable: boolean; seekableRangeStart: number; seekableRangeDuration: number; dvrDuration: number; }
 > &
   Record<NoArgEvents, {}> &
   Record<SkipCommands, { interval: number }>;
