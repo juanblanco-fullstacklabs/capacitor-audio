@@ -27,8 +27,8 @@ export interface AudioPluginPlugin {
 
   addListener<EventName extends keyof EventNameDataMap>(
     eventName: EventName,
-    listener: (data: EventNameDataMap[EventName]) => void
-  ): PluginListenerHandle;
+    listenerFunc: (data: EventNameDataMap[EventName]) => void
+  ): Promise<PluginListenerHandle>;
 }
 
 export interface PlaylistItem {

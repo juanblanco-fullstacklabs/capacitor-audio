@@ -1,4 +1,4 @@
-import { WebPlugin } from "@capacitor/core";
+import { WebPlugin, PluginListenerHandle } from "@capacitor/core";
 import videojs, { VideoJsPlayer } from "video.js";
 import type {
   AudioPluginPlugin,
@@ -72,7 +72,7 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
 
   setPlaying(info: NowPlayingInfo) {
     this.info = info;
-    return new Promise<void>((r) => r());
+    return Promise.resolve();
   }
 
   async setSearchUrl() {
@@ -85,5 +85,14 @@ export class AudioPluginWeb extends WebPlugin implements AudioPluginPlugin {
         this.current.currentTime(options.to);
       }
     }
+  }
+
+  // Implementación compatible con Capacitor 6
+  override addListener(
+    eventName: string,
+    listenerFunc: (data: any) => void
+  ): Promise<PluginListenerHandle> {
+    // Usa el método de la clase base para mantener la compatibilidad
+    return super.addListener(eventName, listenerFunc);
   }
 }
