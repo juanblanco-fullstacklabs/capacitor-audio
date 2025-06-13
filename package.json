@@ -10,7 +10,7 @@
     "watch": "tsc --watch",
     "prepare": "npm run build"
   },
-  "author": "reynoldfullstacklabs",
+  "author": "juanblanco-fullstacklabs",
   "license": "MIT",
   "devDependencies": {
     "@capacitor/android": "^6.0.0",
@@ -23,7 +23,7 @@
     "dist/",
     "ios/",
     "android/",
-    "ReynoldfullstacklabsCapacitorAudio.podspec"
+    "JuanblancofullstacklabsCapacitorAudio.podspec"
   ],
   "keywords": [
     "capacitor",
@@ -40,10 +40,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/reynoldfullstacklabs/capacitor-audio"
+    "url": "github.com/juanblanco-fullstacklabs/capacitor-audio"
   },
   "bugs": {
-    "url": "github.com/reynoldfullstacklabs/capacitor-audio/issues"
+    "url": "github.com/juanblanco-fullstacklabs/capacitor-audio/issues"
   },
   "dependencies": {
     "video.js": "^7.14.1"
