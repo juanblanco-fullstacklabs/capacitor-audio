@@ -1,6 +1,6 @@
 
   Pod::Spec.new do |s|
-    s.name = 'JuanblancofullstacklabsCapacitorAudio'
+    s.name = 'JuanblancoFullstacklabsCapacitorAudio'
     s.version = '0.0.1'
     s.summary = 'Audio plugin for capacitor enable background playing and control center integration'
     s.license = 'MIT'
