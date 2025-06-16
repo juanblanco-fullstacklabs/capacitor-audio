@@ -17,7 +17,8 @@
     "@capacitor/core": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
     "@types/video.js": "^7.3.24",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "video.js": "^7.12.3"
   },
   "files": [
     "dist/",
@@ -44,8 +45,5 @@
   },
   "bugs": {
     "url": "github.com/juanblanco-fullstacklabs/capacitor-audio/issues"
-  },
-  "dependencies": {
-    "video.js": "^7.14.1"
   }
 }
